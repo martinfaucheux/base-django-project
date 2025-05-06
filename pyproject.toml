@@ -2,14 +2,21 @@
 name = "base_django_project"
 version = "0.1.0"
 description = "Default template for PDM package"
-authors = [
-    {name = "Martin Faucheux", email = "martin.faucheux@gmail.com"},
+authors = [{ name = "Martin Faucheux", email = "martin.faucheux@gmail.com" }]
+dependencies = [
+    "djangorestframework>=3.16.0",
+    "django-environ>=0.12.0",
+    "psycopg2-binary>=2.9.10",
+    "django>=5.2",
 ]
-dependencies = ["djangorestframework>=3.16.0", "django-environ>=0.12.0"]
 requires-python = "==3.13.*"
 readme = "README.md"
-license = {text = "MIT"}
+license = { text = "MIT" }
 
 
 [tool.pdm]
 distribution = false
+
+
+[tool.pdm.scripts]
+dm = "python manage.py"

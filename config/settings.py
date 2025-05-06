@@ -30,6 +30,8 @@ SECRET_KEY = env("SECRET_KEY", default="secretkey")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG", default=False)
+ENVIRONMENT = env("ENVIRONMENT", default="dev")
+IS_RUNNING_ON_DOCKER = os.path.exists("/.dockerenv")
 
 ALLOWED_HOSTS = []
 
@@ -74,17 +76,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+if ENVIRONMENT == "dev":
+    db_host = "db" if IS_RUNNING_ON_DOCKER else "localhost"
+else:
+    db_host = env("DB_HOST", default="db")
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("DB_NAME", default="django_project"),
+        "USER": env("DB_USER", default="postgres"),
+        "PASSWORD": env("DB_PASSWORD", default="password"),
+        "HOST": db_host,
+        "PORT": env("DB_PORT", default="5432"),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
