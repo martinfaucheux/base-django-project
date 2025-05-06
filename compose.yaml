@@ -1,0 +1,81 @@
+x-base-django: &base-django
+  build:
+    target: dev
+    args:
+      PYTHON_VERSION: ${PYTHON_VERSION:-3.13}
+  environment:
+    DJANGO_SETTINGS_MODULE: config.settings.local
+    CELERY_TASK_ALWAYS_EAGER: false
+    IPYTHONDIR: /app/.ipython
+  restart: unless-stopped
+  env_file:
+    - .env
+
+x-base-django-with-rebuild: &base-django-with-rebuild
+  <<: *base-django
+  develop:
+    watch:
+      - action: rebuild
+        path: uv.lock
+
+x-base-django-with-rebuild-restart: &base-django-with-rebuild-restart
+  <<: *base-django
+  develop:
+    watch:
+      - action: rebuild
+        path: uv.lock
+      # - action: sync+restart
+      #   path: ./my_project
+      #   target: /app/my_project
+      - action: sync+restart
+        path: ./config
+        target: /app/config
+      - action: sync+restart
+        path: ./manage.py
+        target: /app/manage.py
+
+services:
+  web:
+    <<: *base-django-with-rebuild
+    ports:
+      - "8000:8000"
+    command: python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      # - ./my_project:/app/my_project
+      - ./config:/app/config
+      - ./manage.py:/app/manage.py
+      # - ./templates:/app/templates
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.django.rule=Host(`localhost`)"
+
+  postgres:
+    image: postgres:17
+    volumes:
+      - "db-data:/var/lib/postgresql/data"
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  traefik:
+    image: traefik:v3
+    ports:
+      - 80:80
+      - 8080:8080
+    volumes:
+      - "./traefik/traefik.dev.toml:/etc/traefik/traefik.toml"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+volumes:
+  db-data:
