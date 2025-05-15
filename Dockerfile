@@ -24,7 +24,8 @@ FROM python:${PYTHON_VERSION:-3.13.2}-slim-bullseye AS final
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PATH=/app/.venv/bin:$PATH
+    PATH=/app/.venv/bin:$PATH \
+    PYTHONPATH=/app/.venv/lib/python3.13/site-packages
 
 WORKDIR /app
 
